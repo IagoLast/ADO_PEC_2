@@ -1,4 +1,6 @@
+
 \newpage
+
 # Introducción y objetivos
 
 Las nuevas técnicas de ultra secuenciación, también conocidas cómo next-generation sequencing (NGS) [han revolucionado la práctica clínica](http://www.ncbi.nlm.nih.gov/pubmed/21478889).
@@ -17,12 +19,11 @@ Por motivos didácticos y de eficiencia computacional se ha reducido el número 
 
 A partir de estas muestras previamente clasificadas se intentará listar que genes presentan diferencias estadísticamente significativas en sus niveles de expresión.
 
-
+\newpage
 # Materiales y Métodos
 
 A continuación se resume el flujo de trabajo seguido en el análisis, este trabajo ha sido realizado utilizando R y R-Studio y todo el código y datos está disponible en un repositorio de GitHub de forma que los resultados sean fácilmente reproducibles y cualquier paso puede verse en detalle.
 
-\newpage
 
 ## Muestreo aleatorio simple de los datos
 
@@ -73,6 +74,7 @@ La siguiente tabla muestra los genes que han diferenciado sus niveles de expresi
 
 # Discusión
 
+- Por falta de tiempo no he podido analizar los otros grupos.
 - Sería interesante contrastar los resultados con un biólogo para realizar una interpretación biológica completa.
 - Existen muchas aproximaciones a este problema quizá estaría bien mezclar varias y buscar genes identificados por la mayoría.
 - El creador de Dseq propone un [paso final de normalización](https://www.bioconductor.org/packages/devel/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html) que no se ha realizado en este estudio.
@@ -82,5 +84,5 @@ La siguiente tabla muestra los genes que han diferenciado sus niveles de expresi
 
 # Apéndice
 
-- [Código en github]()
+- [Código en github](https://github.com/IagoLast/ADO_PEC_2)
 - Todas las referencias del texto son link al artículo original. [(Hypercitation)](https://slate.com/technology/2014/02/citing-with-hyperlinks-academia-will-change-with-hypercitation.html)
