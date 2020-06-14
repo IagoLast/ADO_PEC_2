@@ -1,0 +1,11 @@
+---
+title:  Anásisis de microarrays
+author: Iago Lastra Rodríguez
+subtitle: https://github.com/IagoLast/ADO_PEC_2
+abstract: "En este trabajo se realiza un análisis de expresión génica comparando diferentes niveles de expresión de muestras 
+  pertenecientes a un análisis del tiroides en donde se compara tres tipos de infiltración medido en un total de 292 muestras pertenecientes a tres grupos: Not infiltrated tissues (NIT) Small focal infiltrates (SFI)
+  y Extensive lymphoid infiltrates (ELI).
+"
+numbersections: true
+header-includes: |
+    \usepackage{graphicx}

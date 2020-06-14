@@ -1,0 +1,208 @@
+---
+title: "RNAseq pipeline"
+author: "Iago Lastra Rodriguez"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_document:
+    theme: united
+    toc: yes
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+library(SummarizedExperiment)
+library(edgeR)
+library(limma)
+library(Glimma)
+library(gplots)
+library(org.Mm.eg.db)
+library(org.Hs.eg.db)
+library(RColorBrewer)
+library(DESeq2)
+library("pheatmap")
+library("RColorBrewer")
+library("ggbeeswarm")
+library("AnnotationDbi")
+library(stringr)
+
+```
+
+
+# Apertura de los datos
+
+```{r}
+library(readr)
+targets <- read_csv("archivos targets y counts/targets.csv")
+counts <- read_delim("archivos targets y counts/counts.csv",  ";", escape_double = FALSE, trim_ws = TRUE)
+```
+
+# Muestreo aleatorio simple
+
+Para empezar el análisis extraemos 10 muestras aleatorias de cada grupo mediante el código que se muestra a continuación.
+
+```{r}
+set.seed(123)
+sfi <- targets[targets$Group == 'SFI', ]
+eli <- targets[targets$Group == 'ELI', ]
+nit <- targets[targets$Group == 'NIT', ]
+
+sample_SFI <- sfi[sample(nrow(sfi), 10), ]
+sample_ELI <- sfi[sample(nrow(eli), 10), ]
+sample_NIT <- nit[1:10, ] # Elijo los 10 primeros porque sample me devuelve NAs 
+```
+
+Una vez tenemos seleccionados las muestras, pasamos generamos los datasets con una fila por gen y una columna por muestra
+
+```{r}
+counts_tmp <- counts[, c('X1', sample_ELI$Sample_Name, sample_NIT$Sample_Name)]
+counts_raw <- counts_tmp[, c(sample_ELI$Sample_Name, sample_NIT$Sample_Name)] # Elimiamos X1 y  seteamos como rownames
+rownames(counts_raw) <- counts_tmp$X1
+
+names_eli <- sample_ELI$Sample_Name
+names_nit <- sample_NIT$Sample_Name
+
+```
+
+
+
+
+# Visualización incial de los datos
+
+En primer lugar vamos a generar un objeto DGEList
+
+```{r}
+dgeList <- DGEList(counts_raw)
+```
+
+Podemos ver mediante un barplot si existen discrepancias a simple vista entre las muestras:
+
+```{r}
+colors <- sapply(colnames(dgeList), function(name) {ifelse(name %in% names_eli, "red", "blue")})
+
+names <- paste( dgeList$samples$group, colnames(dgeList), sep = " - " ) 
+
+barplot(dgeList$samples$lib.size, names=colnames(dgeList), las=2, col=colors, cex.names=.5)
+
+plt <- barplot(dgeList$samples$lib.size, las=2, col=colors, cex.names=.5)
+
+text(plt, par("usr")[3], labels = colnames(dgeList), srt = 45, adj = c(1, 1), xpd = TRUE, cex=.55)
+```
+
+# Normalización y filtrado
+
+
+```{r}
+# Get log2 counts per million
+logcounts <- cpm(dgeList, log=TRUE)
+
+# Check distributions of samples using boxplots
+boxplot(logcounts, xaxt="n", ylab="Log2 counts per million",las=2, col=colors)
+# Let's add a blue horizontal line that corresponds to the median logCPM
+abline(h=median(logcounts), col="blue")
+title("Boxplots of logCPMs")
+
+
+
+
+```
+
+
+# Transformar nuestra matriz de counts en un DesSeqDataset
+
+```{r}
+countData <- counts_raw
+colData <- targets[targets$Sample_Name %in%  colnames(counts_raw) ,]
+rownames(colData) <- colData$Sample_Name 
+
+# Sort By name !!!
+countData <- countData[, sort(colnames(countData))] 
+colData <-  colData[sort(rownames(colData)),] 
+
+rownames(countData) <- rownames(counts_raw)
+
+dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ Group)
+```
+
+## Pre-filtrado
+
+Eliminamos los genes que apenas se expresan.
+
+```{r}
+nrow(dds)
+dds <- dds[ rowSums(counts(dds)) > 1 ,]
+nrow(dds)
+```
+
+## Procesado de los datos
+
+- Dado que el número de muestras es pequeño utilizamos rlog 
+
+```{r}
+rld <- rlog(dds, blind = FALSE)
+head(assay(rld), 3)
+```
+
+## Comparacion visual
+
+```{r}
+plot(as.data.frame(assay(dds)[, 1:2]))
+plot(as.data.frame(assay(rld)[, 1:2]))
+```
+
+## Matriz de distancia inciial
+
+```{r}
+sampleDists <- dist(t(assay(rld)))
+sampleDists
+```
+
+
+## HeatMap
+
+```{r}
+sampleDistMatrix <- as.matrix( sampleDists )
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255) 
+pheatmap(sampleDistMatrix, clustering_distance_rows = sampleDists, clustering_distance_cols = sampleDists, col = colors)
+```
+
+
+
+# Analisis de expresion diferencial
+
+```{r}
+dds <- DESeq(dds, parallel = TRUE)
+res <- results(dds)
+```
+
+# Extraemos los genes más interesantes
+
+```{r}
+resSig <- subset(res, padj < 0.001)
+head(resSig[ order(resSig$log2FoldChange), ])
+```
+
+
+# Anotacion de genes
+
+```{r}
+columns(org.Hs.eg.db)
+
+# Remove version from ENEMBL 
+row.names(resSig) <- str_replace(row.names(resSig), pattern = ".[0-9]+$", replacement = "")
+resSig$symbol <- mapIds(org.Hs.eg.db, keys=row.names(resSig), column="SYMBOL", keytype="ENSEMBL", multiVals="first")
+
+```
+
+# Tabla de resultados final
+
+```{r, layout="l-body-outset"}
+library(knitr)
+kable(head(na.omit(resSig)))
+```
+
+
+
