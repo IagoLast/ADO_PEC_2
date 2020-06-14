@@ -14,7 +14,7 @@ Por todo esto en este trabajo se analizarán muestras de ultrasecuenciación pro
 - Small focal infiltrates (SFI): 42 samples
 - Extensive lymphoid infiltrates (ELI): 14 samples.
 
-Por motivos didácticos y de eficiencia computacional se ha reducido el número de muestras a 10 por grupo escogidas aleatoriamente.
+Por motivos didácticos y de eficiencia computacional se ha reducido el número de muestras a 10 por grupo escogidas mediante un muestreo aleatorio simple sin repetición. Este trabajo solamente contiene la comparación entre 2 de los 3 grupos.
 
 
 A partir de estas muestras previamente clasificadas se intentará listar que genes presentan diferencias estadísticamente significativas en sus niveles de expresión.
@@ -22,16 +22,16 @@ A partir de estas muestras previamente clasificadas se intentará listar que gen
 \newpage
 # Materiales y Métodos
 
-A continuación se resume el flujo de trabajo seguido en el análisis, este trabajo ha sido realizado utilizando R y R-Studio y todo el código y datos está disponible en un repositorio de GitHub de forma que los resultados sean fácilmente reproducibles y cualquier paso puede verse en detalle.
+A continuación se resume el flujo de trabajo seguido en el análisis, este trabajo ha sido realizado utilizando R y R-Studio y todo el código y datos está disponible en [un repositorio de GitHub](https://github.com/IagoLast/ADO_PEC_2/blob/master/PEC.pdf) de forma que los resultados sean fácilmente reproducibles y cualquier paso puede verse en detalle.
 
 
 ## Muestreo aleatorio simple de los datos
 
 Para crear el conjunto incial de datos se realizó un muestreo aleatorio simple eligiendo 10 muestras correspondientes a cada grupo (NIT) (SFI) (ELI).
 
-## Análisis inicial
+## Análisis inicial.
 
-Una vez elegidas las muestras se realizó un análisis visual sobre los datos en crudo y log2 de CPM para buscar posibles anomalías. El color rojo representa ELI y el azul NIT.
+Una vez elegidas las muestras se realizó un análisis visual sobre los datos en crudo y log2 de CPM para buscar posibles anomalías. El color rojo representa ELI y el azul NIT. Como se puede observar todas las muestras presentan una distribución similar por lo que no hay señales para desconfiar de la calidad de los datos.
 
 
 ![Distribución de intensidades en los datos originales.](img/barplot_1_eli_nit.png){ width=50% }
@@ -39,23 +39,22 @@ Una vez elegidas las muestras se realizó un análisis visual sobre los datos en
 
 ## Filtrado y normalización
 
-De los 56202 genes iniciales, se realiza un filtrado sencillo descartando aquellos que no se expresan quedando como resultado 40742 muestras. Sobre estas muestras se aplica [el algoritmo rlog](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8) dado que [el tamaño de la muestra es pequeño](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885686/).
-
-A continuación se presenta un ejemplo del efecto de la transformación en una muestras. A la izquierda los datos en crudo y a la derecha los normalizados mediante rlog.
+De los 56202 genes iniciales, se realiza un filtrado sencillo descartando aquellos que no se expresan quedando como resultado 40742 muestras. Sobre estas muestras se aplica [el algoritmo rlog](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8) dado que [el tamaño de la muestra es pequeño](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3885686/). A continuación se presenta un ejemplo del efecto de la transformación en una muestras. A la izquierda los datos en crudo y a la derecha los normalizados mediante rlog.
 
 ![Ejemplo de distribución para los datos en crudo de una muestra](img/m1.png){ width=50% }
 ![Distribución de los datos despues de aplicar rlog](img/m2.png){ width=50% }
 
 ## Heatmap
 
+
+
 ![](img/hm.png)
 
 ## Análisis de expresión diferencial
 
-Se utiliza bioconductor con las funciones `DESeqDataSetFromMatrix` y [DESeq](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8) para crear una lista de genes cuya expresión es diferente entre los grupos.
+De todas las opciones disponibles, por su simplicidad y cantidad de documentación disponible se opta por utiliza el paquete Bioconductor con las funciones `DESeqDataSetFromMatrix` y [DESeq](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-014-0550-8) para crear una lista de genes cuya expresión es diferente entre los grupos.
 
-De entre todos ellos seleccionamos los más relevantes de acuerdo a su pvalor y los añadimos la columna SYMBOL derivada de los ENSEMBL IDs para facilitar la interpretación biológica
-de los resultados.
+De entre todos los genes obtenidos seleccionamos los más relevantes de acuerdo a su p-valor y su foldChange y añadimos SYMBOL derivada de los ENSEMBL IDs para facilitar la interpretación biológica de los resultados.
 
 ## Resultados
 
@@ -74,13 +73,11 @@ La siguiente tabla muestra los genes que han diferenciado sus niveles de expresi
 
 # Discusión
 
-- Por falta de tiempo no he podido analizar los otros grupos.
+- Por falta de tiempo no he podido analizar los otros grupos pero el proceso es exáctamente el mismo cambiando las variables al principio del script.
 - Sería interesante contrastar los resultados con un biólogo para realizar una interpretación biológica completa.
 - Existen muchas aproximaciones a este problema quizá estaría bien mezclar varias y buscar genes identificados por la mayoría.
-- El creador de Dseq propone un [paso final de normalización](https://www.bioconductor.org/packages/devel/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html) que no se ha realizado en este estudio.
-- [La universidad de Cambridge](https://bioinformatics-core-shared-training.github.io/RNAseq-R/) propone una aproximación basada en modelos lineales que parece más sencilla de comprender.
-
-
+  - El creador de Dseq propone un [paso final de normalización](https://www.bioconductor.org/packages/devel/workflows/vignettes/rnaseqGene/inst/doc/rnaseqGene.html) que no se ha realizado en este estudio.
+  - [La universidad de Cambridge](https://bioinformatics-core-shared-training.github.io/RNAseq-R/) propone una aproximación basada en modelos lineales que parece más sencilla de comprender.
 
 # Apéndice
 
